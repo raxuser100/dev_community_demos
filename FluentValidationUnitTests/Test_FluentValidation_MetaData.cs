@@ -5,16 +5,16 @@ using FluentValidation.Internal;
 using FluentValidation.Results;
 using Xunit;
 using Xunit.Abstractions;
-namespace CCTools.DevIdeas.UnitTest.ValidationAndBusinessRules
+namespace FluentValidationUnitTests
 {
     public static class FluentValidationExtensions
     {
         static IDictionary<string, object> RulesMetaData { get; } = new Dictionary<string, object>(1000);
 
-        public static void WithMetaData<T, TProperty>(this IRuleBuilderOptions<T, TProperty> rule, object customData)
+        public static void WithMetaData<T, TProperty>(this IRuleBuilderOptions<T, TProperty> rule, object metaData)
         {
             RuleBuilder<T, TProperty> rb = (RuleBuilder<T, TProperty>) rule;
-            RulesMetaData.Add(rb.Rule.RuleMetaDataKeyBuild(), customData);
+            RulesMetaData.Add(rb.Rule.RuleMetaDataKeyBuild(), metaData);
         }
 
         public static object RuleMetaDataGet(this PropertyRule rule) => RulesMetaData[rule.RuleMetaDataKeyBuild()];
@@ -26,9 +26,7 @@ namespace CCTools.DevIdeas.UnitTest.ValidationAndBusinessRules
         }
     }
 
-    /// <summary>
-    ///     To be used on Stack Exchange is a copy of <seealso cref="Test_FluentValidation" />
-    /// </summary>
+
     public class Test_FluentValidation_MetaData
     {
         /// <inheritdoc />
