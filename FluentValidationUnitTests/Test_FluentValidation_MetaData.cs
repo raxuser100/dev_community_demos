@@ -26,7 +26,6 @@ namespace FluentValidationUnitTests
         }
     }
 
-
     public class Test_FluentValidation_MetaData
     {
         /// <inheritdoc />
@@ -38,16 +37,26 @@ namespace FluentValidationUnitTests
         {
             public CustomerValidator()
             {
-                UixEntityProperty uixInfo = UixEntityPropertyCreate();
+                UixEntityProperty uixInfo = new UixEntityProperty {Id = 101, FriendlyName = "Discount level defined by customer loyalty", Help = "Call the Sales supervisor to update."};
 
-                //RuleFor(customer => customer.Surname).NotNull();
                 RuleFor(customer => customer.Discount)
                     .Must((customer, val, context) => !(customer.CreditLevel <= 5 && val > 20))
-                    .WithMessage(customer => $"Customer with Level {customer.CreditLevel} (must be  >=5)  cannot have discount = {customer.Discount}, must be <= 20")
+                    .WithMessage(customer => $"Customer with CreditLevel = {customer.CreditLevel} (must be  >=5)  cannot have discount = {customer.Discount}, must be <= 20")
                     .WithErrorCode(uixInfo.Id.ToString())
                     .WithState(customer => uixInfo)
-                    .WithName(uixInfo.FriendlyName)
-                    .WithMetaData(uixInfo);
+                    .WithName(uixInfo.FriendlyName);
+                //.WithMetaData(uixInfo);
+
+                uixInfo = new UixEntityProperty {Id = 102, FriendlyName = "Discount cannot be negative", Help = "Impossible to do this."};
+                RuleFor(customer => customer.Discount)
+                    .Must((customer, val, context) => !(customer.Discount < 0))
+                    .WithMessage(customer => $"Cannot have discount less than zero = {customer.Discount}")
+                    .WithErrorCode(uixInfo.Id.ToString());
+                //.WithMetaData(uixInfo);                uixInfo = new UixEntityProperty {Id = 102, FriendlyName = "Discount cannot be negative", Help = "Impossible to do this."};
+
+                uixInfo = new UixEntityProperty {Id = 103, FriendlyName = "Surname cannot be empty", Help = "If a longer surname (20 chars plus) then please refer to your team leader"};
+                RuleFor(customer => customer.Surname).NotNull().WithState(customer => uixInfo).WithErrorCode(uixInfo.Id.ToString());
+                //.WithMetaData(uixInfo);
             }
 
             static UixEntityProperty UixEntityPropertyCreate() => new UixEntityProperty {Id = 101, FriendlyName = "Discount level defined by customer loyalty", Help = "Call the Sales supervisor to update."};
@@ -61,7 +70,7 @@ namespace FluentValidationUnitTests
             /// <summary>
             ///     Some Id given to help desk by user if something goes wrong!
             /// </summary>
-            public int Id { get; set; } = 20102;
+            public int Id { get; set; } = -1;
             public string FriendlyName { get; set; } = "Friendly names usually longer ";
             public string Help { get; set; } = "some help here to tell you what this field is all about!";
 
@@ -85,12 +94,11 @@ namespace FluentValidationUnitTests
             return t;
         }
 
-        
         /// <summary>
-        /// Not working, need to create a unique Key per Rule instance.
+        ///     Not working, need to create a unique Key per Rule instance.
         /// </summary>
         [Fact]
-        public void Test_all_rules_display_on_uix_debug()
+        public void Test_display_all_rules_on_uix_before_validation()
         {
             for (int i = 0; i < 10; i++)
             {
@@ -111,13 +119,20 @@ namespace FluentValidationUnitTests
         public void Test_validate_then_display_errors_on_uix_debug()
         {
             Customer t = CustomerCreate();
+            
+            
             CustomerValidator v = new CustomerValidator();
 
             ValidationResult res = v.Validate(t);
 
             if (res.IsValid) return;
+
+            int i = 1;
             foreach (ValidationFailure e in res.Errors)
-                Logger.WriteLine(string.Join(" | ", nameof(e.PropertyName), e.PropertyName, nameof(e.ErrorCode), e.ErrorCode, nameof(e.ErrorMessage), e.ErrorMessage, nameof(e.CustomState), e.CustomState));
+            {
+                Logger.WriteLine(string.Join(" | ", $"Num: {i}", nameof(e.PropertyName), e.PropertyName, nameof(e.ErrorCode), e.ErrorCode, nameof(e.ErrorMessage), e.ErrorMessage, nameof(e.CustomState), e.CustomState));
+                i++;
+            }
         }
     }
 }
